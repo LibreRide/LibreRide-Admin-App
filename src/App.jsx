@@ -47,74 +47,128 @@ function App() {
     setRatings(ratingData || [])
   }
 
-  const totalRides = rides.length
-  const activeRides = rides.filter((r) =>
-    ['requested', 'accepted', 'arrived', 'in_progress'].includes(r.status)
-  ).length
-  const completedRides = rides.filter((r) => r.status === 'completed').length
-  const onlineDrivers = drivers.filter((d) => d.is_online).length
-  const totalEarnings = drivers.reduce((sum, d) => sum + Number(d.total_earnings || 0), 0)
+  function fare(ride) {
+    return Number((ride.final_fare_cents || ride.estimated_fare_cents || 0) / 100)
+  }
+
+  function money(amount) {
+    return `$${Number(amount || 0).toFixed(2)}`
+  }
+
+  function formatDate(value) {
+    if (!value) return ''
+    return new Date(value).toLocaleString()
+  }
 
   function avgRating(driverId) {
     const driverRatings = ratings.filter((r) => r.driver_id === driverId)
     if (driverRatings.length === 0) return 'No ratings'
     const total = driverRatings.reduce((sum, r) => sum + Number(r.rating), 0)
-    return `${(total / driverRatings.length).toFixed(1)} ★`
+    return `${(total / driverRatings.length).toFixed(1)} ★ (${driverRatings.length})`
   }
 
-  function fare(ride) {
-    return `$${((ride.final_fare_cents || ride.estimated_fare_cents || 0) / 100).toFixed(2)}`
-  }
+  const totalRides = rides.length
+  const completedRides = rides.filter((r) => r.status === 'completed').length
+  const activeRides = rides.filter((r) =>
+    ['requested', 'accepted', 'arrived', 'in_progress'].includes(r.status)
+  ).length
+  const cancelledRides = rides.filter((r) => r.status === 'cancelled').length
+  const declinedRides = rides.filter((r) => r.status === 'declined').length
+
+  const totalDrivers = drivers.length
+  const onlineDrivers = drivers.filter((d) => d.is_online).length
+  const offlineDrivers = totalDrivers - onlineDrivers
+
+  const totalRevenue = rides
+    .filter((r) => r.status === 'completed')
+    .reduce((sum, r) => sum + fare(r), 0)
+
+  const averageFare = completedRides > 0 ? totalRevenue / completedRides : 0
+
+  const totalDriverEarnings = drivers.reduce(
+    (sum, d) => sum + Number(d.total_earnings || 0),
+    0
+  )
+
+  const today = new Date().toDateString()
+
+  const todayCompletedRides = rides.filter((r) => {
+    if (r.status !== 'completed' || !r.completed_at) return false
+    return new Date(r.completed_at).toDateString() === today
+  })
+
+  const todayRevenue = todayCompletedRides.reduce((sum, r) => sum + fare(r), 0)
+
+  const activeRideList = rides.filter((r) =>
+    ['requested', 'accepted', 'arrived', 'in_progress'].includes(r.status)
+  )
 
   return (
     <div className="driver-app">
       <header className="card">
         <h1>LibreRide Admin</h1>
         <p>Operations dashboard</p>
+        <button onClick={loadDashboard}>Refresh Dashboard</button>
       </header>
 
       {message && <p>{message}</p>}
 
       <section className="card">
-        <h2>Overview</h2>
+        <h2>Business Overview</h2>
         <p><strong>Total Rides:</strong> {totalRides}</p>
         <p><strong>Active Rides:</strong> {activeRides}</p>
         <p><strong>Completed Rides:</strong> {completedRides}</p>
-        <p><strong>Online Drivers:</strong> {onlineDrivers}</p>
-        <p><strong>Total Driver Earnings:</strong> ${totalEarnings.toFixed(2)}</p>
+        <p><strong>Cancelled Rides:</strong> {cancelledRides}</p>
+        <p><strong>Declined Rides:</strong> {declinedRides}</p>
       </section>
 
       <section className="card">
-        <h2>Active Rides</h2>
-        {rides.filter((r) => ['requested', 'accepted', 'arrived', 'in_progress'].includes(r.status)).length === 0 ? (
-          <p>No active rides.</p>
-        ) : (
-          rides
-            .filter((r) => ['requested', 'accepted', 'arrived', 'in_progress'].includes(r.status))
-            .map((ride) => (
-              <div key={ride.id} className="ride-card">
-                <p><strong>Status:</strong> {ride.status}</p>
-                <p><strong>Pickup:</strong> {ride.pickup_address || 'Unknown'}</p>
-                <p><strong>Dropoff:</strong> {ride.destination_address || 'Unknown'}</p>
-                <p><strong>Fare:</strong> {fare(ride)}</p>
-                <p><strong>Driver ID:</strong> {ride.driver_id || 'Unassigned'}</p>
-              </div>
-            ))
-        )}
+        <h2>Revenue</h2>
+        <p><strong>Total Revenue:</strong> {money(totalRevenue)}</p>
+        <p><strong>Today Revenue:</strong> {money(todayRevenue)}</p>
+        <p><strong>Average Fare:</strong> {money(averageFare)}</p>
+        <p><strong>Total Driver Earnings:</strong> {money(totalDriverEarnings)}</p>
       </section>
 
       <section className="card">
         <h2>Drivers</h2>
+        <p><strong>Total Drivers:</strong> {totalDrivers}</p>
+        <p><strong>Online Drivers:</strong> {onlineDrivers}</p>
+        <p><strong>Offline Drivers:</strong> {offlineDrivers}</p>
+      </section>
+
+      <section className="card">
+        <h2>Active Rides</h2>
+
+        {activeRideList.length === 0 ? (
+          <p>No active rides.</p>
+        ) : (
+          activeRideList.map((ride) => (
+            <div key={ride.id} className="ride-card">
+              <p><strong>Status:</strong> {ride.status}</p>
+              <p><strong>Pickup:</strong> {ride.pickup_address || 'Unknown'}</p>
+              <p><strong>Dropoff:</strong> {ride.destination_address || 'Unknown'}</p>
+              <p><strong>Fare:</strong> {money(fare(ride))}</p>
+              <p><strong>Driver ID:</strong> {ride.driver_id || 'Unassigned'}</p>
+              <p><strong>Created:</strong> {formatDate(ride.created_at)}</p>
+            </div>
+          ))
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Driver Management</h2>
+
         {drivers.length === 0 ? (
           <p>No drivers found.</p>
         ) : (
           drivers.map((driver) => (
             <div key={driver.id} className="ride-card">
               <p><strong>Email:</strong> {driver.email || 'Unknown'}</p>
-              <p><strong>Status:</strong> {driver.availability_status || 'offline'}</p>
+              <p><strong>Availability:</strong> {driver.availability_status || 'offline'}</p>
               <p><strong>Online:</strong> {driver.is_online ? 'Yes' : 'No'}</p>
               <p><strong>Trips:</strong> {driver.total_trips || 0}</p>
-              <p><strong>Earnings:</strong> ${Number(driver.total_earnings || 0).toFixed(2)}</p>
+              <p><strong>Earnings:</strong> {money(driver.total_earnings || 0)}</p>
               <p><strong>Rating:</strong> {avgRating(driver.id)}</p>
             </div>
           ))
@@ -123,15 +177,37 @@ function App() {
 
       <section className="card">
         <h2>Recent Rides</h2>
+
         {rides.length === 0 ? (
           <p>No rides yet.</p>
         ) : (
-          rides.slice(0, 10).map((ride) => (
+          rides.slice(0, 15).map((ride) => (
             <div key={ride.id} className="ride-card">
               <p><strong>Status:</strong> {ride.status}</p>
               <p><strong>Pickup:</strong> {ride.pickup_address || 'Unknown'}</p>
               <p><strong>Dropoff:</strong> {ride.destination_address || 'Unknown'}</p>
-              <p><strong>Fare:</strong> {fare(ride)}</p>
+              <p><strong>Fare:</strong> {money(fare(ride))}</p>
+              <p><strong>Created:</strong> {formatDate(ride.created_at)}</p>
+              {ride.completed_at && (
+                <p><strong>Completed:</strong> {formatDate(ride.completed_at)}</p>
+              )}
+            </div>
+          ))
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Recent Ratings</h2>
+
+        {ratings.length === 0 ? (
+          <p>No ratings yet.</p>
+        ) : (
+          ratings.slice(0, 10).map((rating) => (
+            <div key={rating.id} className="ride-card">
+              <p><strong>Rating:</strong> {rating.rating} ★</p>
+              <p><strong>Comment:</strong> {rating.comment || 'No comment'}</p>
+              <p><strong>Driver ID:</strong> {rating.driver_id}</p>
+              <p><strong>Date:</strong> {formatDate(rating.created_at)}</p>
             </div>
           ))
         )}
