@@ -47,6 +47,53 @@ function App() {
     setRatings(ratingData || [])
   }
 
+  async function approveDriver(driverId) {
+    setMessage('')
+
+    const { error } = await supabase
+      .from('drivers')
+      .update({
+        onboarding_status: 'approved',
+        background_check_status: 'approved',
+        approved_at: new Date().toISOString(),
+        rejected_at: null,
+        rejection_reason: null,
+      })
+      .eq('id', driverId)
+
+    if (error) {
+      setMessage(error.message)
+      return
+    }
+
+    setMessage('Driver approved.')
+    await loadDashboard()
+  }
+
+  async function rejectDriver(driverId) {
+    setMessage('')
+
+    const reason = window.prompt('Reason for rejection?', 'Documents need review')
+
+    const { error } = await supabase
+      .from('drivers')
+      .update({
+        onboarding_status: 'rejected',
+        background_check_status: 'rejected',
+        rejected_at: new Date().toISOString(),
+        rejection_reason: reason || 'Rejected by admin',
+      })
+      .eq('id', driverId)
+
+    if (error) {
+      setMessage(error.message)
+      return
+    }
+
+    setMessage('Driver rejected.')
+    await loadDashboard()
+  }
+
   function fare(ride) {
     return Number((ride.final_fare_cents || ride.estimated_fare_cents || 0) / 100)
   }
@@ -78,6 +125,8 @@ function App() {
   const totalDrivers = drivers.length
   const onlineDrivers = drivers.filter((d) => d.is_online).length
   const offlineDrivers = totalDrivers - onlineDrivers
+  const pendingDrivers = drivers.filter((d) => d.onboarding_status === 'pending_review').length
+  const approvedDrivers = drivers.filter((d) => d.onboarding_status === 'approved').length
 
   const totalRevenue = rides
     .filter((r) => r.status === 'completed')
@@ -102,6 +151,8 @@ function App() {
   const activeRideList = rides.filter((r) =>
     ['requested', 'accepted', 'arrived', 'in_progress'].includes(r.status)
   )
+
+  const pendingDriverList = drivers.filter((d) => d.onboarding_status === 'pending_review')
 
   return (
     <div className="driver-app">
@@ -133,8 +184,33 @@ function App() {
       <section className="card">
         <h2>Drivers</h2>
         <p><strong>Total Drivers:</strong> {totalDrivers}</p>
+        <p><strong>Pending Review:</strong> {pendingDrivers}</p>
+        <p><strong>Approved Drivers:</strong> {approvedDrivers}</p>
         <p><strong>Online Drivers:</strong> {onlineDrivers}</p>
         <p><strong>Offline Drivers:</strong> {offlineDrivers}</p>
+      </section>
+
+      <section className="card">
+        <h2>Pending Driver Approvals</h2>
+
+        {pendingDriverList.length === 0 ? (
+          <p>No pending drivers.</p>
+        ) : (
+          pendingDriverList.map((driver) => (
+            <div key={driver.id} className="ride-card">
+              <p><strong>Name:</strong> {driver.first_name || ''} {driver.last_name || ''}</p>
+              <p><strong>Email:</strong> {driver.email || 'Unknown'}</p>
+              <p><strong>Phone:</strong> {driver.phone || 'Not provided'}</p>
+              <p><strong>License:</strong> {driver.license_number || 'Not provided'}</p>
+              <p><strong>Vehicle:</strong> {driver.vehicle_year || ''} {driver.vehicle_make || ''} {driver.vehicle_model || ''}</p>
+              <p><strong>Plate:</strong> {driver.vehicle_plate || 'Not provided'}</p>
+              <p><strong>Status:</strong> {driver.onboarding_status || 'not_started'}</p>
+
+              <button onClick={() => approveDriver(driver.id)}>Approve</button>
+              <button onClick={() => rejectDriver(driver.id)}>Reject</button>
+            </div>
+          ))
+        )}
       </section>
 
       <section className="card">
@@ -164,12 +240,21 @@ function App() {
         ) : (
           drivers.map((driver) => (
             <div key={driver.id} className="ride-card">
+              <p><strong>Name:</strong> {driver.first_name || ''} {driver.last_name || ''}</p>
               <p><strong>Email:</strong> {driver.email || 'Unknown'}</p>
+              <p><strong>Onboarding:</strong> {driver.onboarding_status || 'not_started'}</p>
               <p><strong>Availability:</strong> {driver.availability_status || 'offline'}</p>
               <p><strong>Online:</strong> {driver.is_online ? 'Yes' : 'No'}</p>
               <p><strong>Trips:</strong> {driver.total_trips || 0}</p>
               <p><strong>Earnings:</strong> {money(driver.total_earnings || 0)}</p>
               <p><strong>Rating:</strong> {avgRating(driver.id)}</p>
+
+              {driver.onboarding_status === 'pending_review' && (
+                <>
+                  <button onClick={() => approveDriver(driver.id)}>Approve</button>
+                  <button onClick={() => rejectDriver(driver.id)}>Reject</button>
+                </>
+              )}
             </div>
           ))
         )}
