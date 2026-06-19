@@ -206,8 +206,19 @@ function App() {
               <p><strong>Plate:</strong> {driver.vehicle_plate || 'Not provided'}</p>
               <p><strong>Status:</strong> {driver.onboarding_status || 'not_started'}</p>
 
-              <button onClick={() => approveDriver(driver.id)}>Approve</button>
-              <button onClick={() => rejectDriver(driver.id)}>Reject</button>
+<button
+  className="approve-btn"
+  onClick={() => approveDriver(driver.id)}
+>
+  Approve
+</button>
+
+<button
+  className="reject-btn"
+  onClick={() => rejectDriver(driver.id)}
+>
+  Reject
+</button>
             </div>
           ))
         )}
@@ -251,8 +262,19 @@ function App() {
 
               {driver.onboarding_status === 'pending_review' && (
                 <>
-                  <button onClick={() => approveDriver(driver.id)}>Approve</button>
-                  <button onClick={() => rejectDriver(driver.id)}>Reject</button>
+<button
+  className="approve-btn"
+  onClick={() => approveDriver(driver.id)}
+>
+  Approve
+</button>
+
+<button
+  className="reject-btn"
+  onClick={() => rejectDriver(driver.id)}
+>
+  Reject
+</button>
                 </>
               )}
             </div>
