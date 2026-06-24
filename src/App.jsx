@@ -94,6 +94,24 @@ function App() {
     await loadDashboard()
   }
 
+  async function openDriverDocument(path) {
+    if (!path) {
+      setMessage('No document uploaded.')
+      return
+    }
+
+    const { data, error } = await supabase.storage
+      .from('driver-documents')
+      .createSignedUrl(path, 60)
+
+    if (error) {
+      setMessage(error.message)
+      return
+    }
+
+    window.open(data.signedUrl, '_blank')
+  }
+
   function fare(ride) {
     return Number((ride.final_fare_cents || ride.estimated_fare_cents || 0) / 100)
   }
@@ -112,6 +130,26 @@ function App() {
     if (driverRatings.length === 0) return 'No ratings'
     const total = driverRatings.reduce((sum, r) => sum + Number(r.rating), 0)
     return `${(total / driverRatings.length).toFixed(1)} ★ (${driverRatings.length})`
+  }
+
+  function DriverDocuments({ driver }) {
+    return (
+      <>
+        <p><strong>Documents:</strong></p>
+
+        <button type="button" onClick={() => openDriverDocument(driver.license_front_url)}>
+          View License Front
+        </button>
+
+        <button type="button" onClick={() => openDriverDocument(driver.license_back_url)}>
+          View License Back
+        </button>
+
+        <button type="button" onClick={() => openDriverDocument(driver.insurance_card_url)}>
+          View Insurance
+        </button>
+      </>
+    )
   }
 
   const totalRides = rides.length
@@ -159,7 +197,7 @@ function App() {
       <header className="card">
         <h1>LibreRide Admin</h1>
         <p>Operations dashboard</p>
-        <button onClick={loadDashboard}>Refresh Dashboard</button>
+        <button type="button" onClick={loadDashboard}>Refresh Dashboard</button>
       </header>
 
       {message && <p>{message}</p>}
@@ -206,19 +244,15 @@ function App() {
               <p><strong>Plate:</strong> {driver.vehicle_plate || 'Not provided'}</p>
               <p><strong>Status:</strong> {driver.onboarding_status || 'not_started'}</p>
 
-<button
-  className="approve-btn"
-  onClick={() => approveDriver(driver.id)}
->
-  Approve
-</button>
+              <DriverDocuments driver={driver} />
 
-<button
-  className="reject-btn"
-  onClick={() => rejectDriver(driver.id)}
->
-  Reject
-</button>
+              <button className="approve-btn" type="button" onClick={() => approveDriver(driver.id)}>
+                Approve
+              </button>
+
+              <button className="reject-btn" type="button" onClick={() => rejectDriver(driver.id)}>
+                Reject
+              </button>
             </div>
           ))
         )}
@@ -260,21 +294,17 @@ function App() {
               <p><strong>Earnings:</strong> {money(driver.total_earnings || 0)}</p>
               <p><strong>Rating:</strong> {avgRating(driver.id)}</p>
 
+              <DriverDocuments driver={driver} />
+
               {driver.onboarding_status === 'pending_review' && (
                 <>
-<button
-  className="approve-btn"
-  onClick={() => approveDriver(driver.id)}
->
-  Approve
-</button>
+                  <button className="approve-btn" type="button" onClick={() => approveDriver(driver.id)}>
+                    Approve
+                  </button>
 
-<button
-  className="reject-btn"
-  onClick={() => rejectDriver(driver.id)}
->
-  Reject
-</button>
+                  <button className="reject-btn" type="button" onClick={() => rejectDriver(driver.id)}>
+                    Reject
+                  </button>
                 </>
               )}
             </div>
