@@ -1,112 +1,183 @@
+:root {
+  font-family: Inter, system-ui, Arial, sans-serif;
+  color: #111827;
+  background: #eef2ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-margin: 0;
-font-family: Arial, sans-serif;
-background: #f3f5f8;
+  margin: 0;
 }
 
-.driver-app {
-max-width: 1100px;
-margin: 40px auto;
-padding: 24px;
-}
-
-.card {
-background: white;
-border-radius: 18px;
-padding: 20px;
-margin-top: 16px;
-box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.card h2 {
-margin-top: 0;
-margin-bottom: 12px;
+button,
+input,
+textarea {
+  font: inherit;
 }
 
 button {
-padding: 12px 20px;
-border: none;
-border-radius: 12px;
-background: #2563eb;
-color: white;
-font-size: 15px;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.2s ease;
-}
-
-button:hover {
-background: #1d4ed8;
+  border: 0;
+  border-radius: 10px;
+  background: #1e40af;
+  color: white;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-weight: 700;
 }
 
 button:disabled {
-background: #94a3b8;
-cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.approve-btn {
-background: #16a34a;
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 8px 0 14px;
+  background: white;
 }
 
-.approve-btn:hover {
-background: #15803d;
+textarea {
+  min-height: 80px;
+  resize: vertical;
 }
 
-.reject-btn {
-background: #dc2626;
+label {
+  font-weight: 700;
 }
 
-.reject-btn:hover {
-background: #b91c1c;
-}
-
-.ride-card {
-border: 1px solid #e5e7eb;
-border-radius: 12px;
-padding: 14px;
-margin-top: 12px;
-background: #fafafa;
-}
-
-.ride-card p {
-margin: 6px 0;
-}
-
-.status {
-font-size: 32px;
-font-weight: bold;
-margin: 12px 0;
-}
-
-.success {
-color: #16a34a;
-font-weight: 600;
-}
-
-.error {
-color: #dc2626;
-font-weight: 600;
-}
-
-h1 {
-margin: 0;
-}
-
-h2 {
-margin-top: 0;
-}
-
-@media (max-width: 768px) {
-.driver-app {
-padding: 12px;
+.admin-app {
+  width: min(1150px, 100%);
+  margin: 0 auto;
+  padding: 18px;
 }
 
 .card {
-padding: 16px;
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
-button {
-width: 100%;
-margin-top: 8px;
+.login-card {
+  max-width: 460px;
+  margin: 80px auto;
 }
+
+.header-card,
+.driver-card-header,
+.action-row,
+.filter-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.filter-row {
+  justify-content: flex-start;
+}
+
+.driver-card {
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  background: #f8fafc;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 18px;
+  margin: 12px 0;
+}
+
+.badge-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1e3a8a;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.approval-box {
+  background: white;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 14px 0;
+}
+
+.checkbox-row {
+  display: block;
+  margin: 8px 0;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin-right: 8px;
+}
+
+.message {
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #14532d;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 700;
+}
+
+.warning {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #78350f;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.danger {
+  background: #dc2626;
+}
+
+.warning-button {
+  background: #d97706;
+}
+
+@media (max-width: 720px) {
+  .admin-app {
+    padding: 12px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-card,
+  .driver-card-header,
+  .action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
 }
