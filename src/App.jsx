@@ -215,11 +215,30 @@ function App() {
     }
   }
 
-  async function openDriverDocument(path) {
-    if (!path) {
-      setMessage('This file has not been uploaded yet.')
+ async function openDriverDocument(path) {
+  if (!path) {
+    setMessage('This file has not been uploaded yet.')
+    return
+  }
+
+  setMessage('')
+
+  try {
+    const data = await apiFetch('/api/admin/driver-documents/signed-url', {
+      method: 'POST',
+      body: JSON.stringify({ path }),
+    })
+
+    if (!data.signedUrl) {
+      setMessage('Could not open document.')
       return
     }
+
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  } catch (error) {
+    setMessage(error.message)
+  }
+}
 
     setMessage('')
 
