@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "libreride-admin-panel",
+  "name": "libreride-admin-app",
   "compatibility_date": "2026-06-26",
   "observability": {
     "enabled": true
