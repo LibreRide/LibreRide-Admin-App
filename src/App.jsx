@@ -240,19 +240,6 @@ function App() {
   }
 }
 
-    setMessage('')
-
-    const { data, error } = await supabase.storage
-      .from('driver-documents')
-      .createSignedUrl(path, 120)
-
-    if (error) {
-      setMessage(error.message)
-      return
-    }
-
-    window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
-  }
 
   function driverDocuments(driver) {
     return [
